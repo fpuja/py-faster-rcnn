@@ -52,8 +52,10 @@ def detection(net, image_name):
 
     # Detect all object classes and regress object bounds
     scores, boxes = im_detect(net, im)
-    boxsave = np.vstack((np.mean(boxes[:,0::4],axis=1),np.mean(boxes[:,1::4],axis=1),np.mean(boxes[:,2::4],axis=1),np.mean(boxes[:,3::4],axis=1))).T
-
+    
+    boxsave = np.vstack((np.mean(boxes[:,4::4],axis=1),np.mean(boxes[:,5::4],axis=1),np.mean(boxes[:,6::4],axis=1),np.mean(boxes[:,7::4],axis=1))).T
+    zs = scores[:,1:]
+    
     if args.debug:
         print 'Saving scores and BBs to mat file'
 
@@ -63,7 +65,8 @@ def detection(net, image_name):
     # Visualize detections for each class
     CONF_THRESH = 0.8
     NMS_THRESH = 0.3
-    for cls_ind, cls in enumerate(CLASSES[1:]):
+    data = dict((ocls.replace(' ','_'), []) for ocls in CLASSES[1:])
+    for cls_ind, ocls in enumerate(CLASSES[1:]):
         cls_ind += 1 # because we skipped background
         cls_boxes = boxes[:, 4*cls_ind:4*(cls_ind + 1)]
         cls_scores = scores[:, cls_ind]
@@ -71,8 +74,9 @@ def detection(net, image_name):
                           cls_scores[:, np.newaxis])).astype(np.float32)
         keep = nms(dets, NMS_THRESH)
         dets = dets[keep, :]
+        data[ocls.replace(' ','_')] = dets
 
-    sio.savemat(outputfile, {'boxes':boxsave,'zs':scores,'cls':cls,'dets':dets})
+    sio.savemat(outputfile, {'boxes':boxsave,'zs':zs,'data':data})
 
 def parse_args():
     """Parse input arguments."""

@@ -26,17 +26,22 @@ class imagenet(imdb):
         self._devkit_path = self._get_default_path() if devkit_path is None \
                             else devkit_path
         self._data_path = os.path.join(self._devkit_path)
-        self._wnid = ('__background__','n00007846','n00483705',
-			'n02084071','n02374451','n02764044',
-			'n02834778','n02908217','n03063073',
-			'n03540090','n03584829','n03649909',
-			'n04409806','n04453156','n04517823')
+        self._wnid = ('__background__',
+			'n00483705',
+			'n02084071','n02374451','n02764044','n02779435',
+			'n02834778','n02876657','n02908217','n02909870',
+			'n03063073','n03147509','n03416640','n03438257',
+			'n03467984','n03540090','n03584829','n03649909',
+			'n03820154','n04373894','n04409806','n04453156',
+			'n04493381','n04517823','m04553703')
         self._classes = ('__background__', # always index 0
-                        'person','tennis court',
-			'dog','horse','axe',
-			'bicycle','brush','coffee cup',
-			'hose','clothes iron','lawn mower',
-			'tennis racquet','toothbrush','vacuum cleaner')
+                        'tennis court',
+			'dog','horse','axe','ball',
+			'bicycle','bottle','brush','bucket',
+			'coffee cup','cup','garage','glass',
+			'gun','hose','clothes iron','lawn mower',
+			'net','sword','tennis racquet','toothbrush',
+			'tub','vacuum cleaner','washbasin')
         self._wnid_to_ind = dict(zip(self._wnid, xrange(self.num_classes)))
         self._class_to_ind = dict(zip(self.classes, xrange(self.num_classes)))
         self._image_ext = '.JPEG'
@@ -206,6 +211,8 @@ class imagenet(imdb):
             #     print 'Removed {} difficult objects'.format(
             #         len(objs) - len(non_diff_objs))
             objs = non_diff_objs
+	valid_key_objs = [ obj for obj in objs if obj.find('name').text.lower().strip() in self._wnid] 
+	objs = valid_key_objs
         num_objs = len(objs)
 
         boxes = np.zeros((num_objs, 4), dtype=np.uint16)

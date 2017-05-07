@@ -27,7 +27,7 @@ case $DATASET in
     TRAIN_IMDB="imagenet_trainval"
     TEST_IMDB="imagenet_test"
     PT_DIR="imagenet"
-    ITERS=100000
+    ITERS=70000
     ;;
   pascal_voc)
     TRAIN_IMDB="voc_2007_trainval"
