@@ -29,16 +29,16 @@ class imagenet(imdb):
         self._wnid = ('__background__',
 			'n00483705',
 			'n02084071','n02374451','n02764044','n02779435',
-			'n02834778','n02876657','n02908217','n02909870',
-			'n03063073','n03147509','n03416640','n03438257',
+			'n02834778','n02876657','n04156140','n02909870',
+			'n03063073','n03416640','n03438257',
 			'n03467984','n03540090','n03584829','n03649909',
 			'n03820154','n04373894','n04409806','n04453156',
-			'n04493381','n04517823','m04553703')
+			'n04493381','n04517823','n04553703')
         self._classes = ('__background__', # always index 0
                         'tennis court',
 			'dog','horse','axe','ball',
 			'bicycle','bottle','brush','bucket',
-			'coffee cup','cup','garage','glass',
+			'coffee cup','garage','glass',
 			'gun','hose','clothes iron','lawn mower',
 			'net','sword','tennis racquet','toothbrush',
 			'tub','vacuum cleaner','washbasin')

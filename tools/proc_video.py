@@ -45,9 +45,39 @@ NETS = {'vgg16': ('VGG16',
         'zfim': ('ZF',
                 'ZF_faster_rcnn_imagenet_final.caffemodel')}
 
-def detection(net, image_name):
-    """Detect object classes in an image using pre-computed object proposals."""
+def vis_detections(im, class_name_all, detsall, ax, thresh=0.5):
+    """Draw detected bounding boxes."""
+    ax.cla()
+    im = im[:, :, (2, 1, 0)]
+    ax.imshow(im, aspect='equal')
+    for ix, dets in enumerate(detsall):
+        inds = np.where(dets[:, -1] >= thresh)[0]
+        #print dets
+        if len(inds) == 0:
+            continue
 
+        for i in inds:
+            bbox = dets[i, :4]
+            score = dets[i, -1]
+
+            ax.add_patch(
+                plt.Rectangle((bbox[0], bbox[1]),
+                              bbox[2] - bbox[0],
+                              bbox[3] - bbox[1], fill=False,
+                              edgecolor='red', linewidth=3.5)
+                )
+            ax.text(bbox[0], bbox[1] - 2,
+                    '{:s} {:.3f}'.format(class_name_all[ix], score),
+                    bbox=dict(facecolor='blue', alpha=0.5),
+                    fontsize=14, color='white')
+    plt.axis('off')
+    plt.tight_layout()
+    plt.draw()
+    plt.pause(0.01)
+
+def detection(net, im, ax):
+    """Detect object classes in an image using pre-computed object proposals."""
+    '''
     basename = os.path.basename(image_name)
     outputfile = '{}.mat'.format(os.path.join(args.save_dir, basename))
     if os.path.exists(outputfile):
@@ -56,22 +86,17 @@ def detection(net, image_name):
     # Load the demo image
     im_file = os.path.join(image_name)
     im = cv2.imread(im_file)
-
+    '''
     # Detect all object classes and regress object bounds
     scores, boxes = im_detect(net, im)
-    
-    boxsave = np.vstack((np.mean(boxes[:,4::4],axis=1),np.mean(boxes[:,5::4],axis=1),np.mean(boxes[:,6::4],axis=1),np.mean(boxes[:,7::4],axis=1))).T
-    zs = scores[:,1:]
-    
-    if args.debug:
-        print 'Saving scores and BBs to mat file'
-
 
     #print ('{}.mat'.format(os.path.join(args.save_dir, basename)))
 
     # Visualize detections for each class
     CONF_THRESH = 0.7
     NMS_THRESH = 0.3
+    detsall = []
+    oclsall = []
     data = dict((ocls.replace(' ','_'), []) for ocls in CLASSES[1:])
     for cls_ind, ocls in enumerate(CLASSES[1:]):
         cls_ind += 1 # because we skipped background
@@ -81,15 +106,15 @@ def detection(net, image_name):
                           cls_scores[:, np.newaxis])).astype(np.float32)
         keep = nms(dets, NMS_THRESH)
         dets = dets[keep, :]
-        data[ocls.replace(' ','_')] = dets
+        detsall.append(dets)
+        oclsall.append(ocls)
 
-    sio.savemat(outputfile, {'boxes':boxsave,'zs':zs,'data':data})
+    vis_detections(im, oclsall, detsall, ax, thresh=CONF_THRESH)
 
 def parse_args():
     """Parse input arguments."""
     parser = argparse.ArgumentParser()
-    parser.add_argument('frames_dir')
-    parser.add_argument('save_dir')
+    parser.add_argument('vid_file')
     parser.add_argument('--gpu', dest='gpu_id', help='GPU device id to use [0]',
                         default=0, type=int)
     parser.add_argument('--cpu', dest='cpu_mode',
@@ -133,18 +158,20 @@ if __name__ == '__main__':
     for i in xrange(2):
         _, _= im_detect(net, im)
 
-    images = sorted(glob.glob(os.path.join(args.frames_dir,'*')))
-    print ("Processing {}: {} files... ".format(args.frames_dir, len(images))),
     sys.stdout.flush
 
-    if not os.path.isdir(args.save_dir):
-        os.makedirs(args.save_dir)
+    print 'Processing video {}'.format(os.path.basename(args.vid_file))
+    cap = cv2.VideoCapture(args.vid_file)
+
+
+    fig, ax = plt.subplots(figsize=(12, 12))
 
     timer = Timer()
     timer.tic()
-    for image in images:
-        if args.debug:
-            print ("Processing file {}".format(image))
-        detection(net, image)
+    while(cap.isOpened()):
+        ret, image = cap.read()
+        detection(net, image, ax)
+    fig.close()
+    cap.release()
     timer.toc()
     print "{:.2f} min, {:.2f} fps".format((timer.total_time) / 60., 1. * len(images) / (timer.total_time))
